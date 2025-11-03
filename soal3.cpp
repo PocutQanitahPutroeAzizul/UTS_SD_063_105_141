@@ -7,10 +7,6 @@
 using namespace std;
 
 /**
- * Fungsi: virus_spread_bfs
- * Tugas: Mensimulasikan penyebaran virus dari "start" sampai "K" hari.
- * Konsep: Menggunakan BFS untuk mencari jarak terpendek (jumlah hari) dari node awal ke node lain.
- * * Parameter:
  * V: Jumlah total orang (Vertex).
  * adj: Daftar pertemanan (Adjacency List).
  * start: Orang pertama yang terinfeksi (Node Awal).
