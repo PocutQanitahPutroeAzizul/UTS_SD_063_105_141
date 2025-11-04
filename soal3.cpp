@@ -75,7 +75,7 @@ int main() {
     
     cout << "Awal terinfeksi: node " << S << " pada hari 0\n";
     
-    // Panggil simulasi.
+    // memanggil atau menjalankan fungsi BFS yang berisi seluruh logika algoritma BFS untuk simulasi penyebaran infeksi
     vector<int> result = bfs_infected(V, adj, S, K);
     
     // Output hasil.
