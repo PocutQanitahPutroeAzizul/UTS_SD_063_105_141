@@ -2,125 +2,93 @@
 #include <vector>
 #include <queue>
 #include <algorithm>
-#include <set>
 
 using namespace std;
 
-/**
- * V: Jumlah total orang (Vertex).
- * adj: Daftar pertemanan (Adjacency List).
- * start: Orang pertama yang terinfeksi (Node Awal).
- * K: Hari yang ditanyakan.
- */
-vector<int> virus_spread_bfs(int V, const vector<vector<int>>& adj, int start, int K) {
-    // 'distance' akan mencatat: "Pada hari ke berapa orang ini terinfeksi?"
-    // Nilai -1 berarti belum terinfeksi.
-    vector<int> distance(V, -1);
-    queue<int> q;
-    vector<int> infected_on_K;
-
-    // --- Kasus Khusus: Hari ke-0 ---
-    // Jika K=0, hasilnya langsung orang awal itu sendiri.
-    if (K == 0) {
-        if (start >= 0 && start < V) {
-            infected_on_K.push_back(start);
-        }
-        return infected_on_K;
-    }
-
-    // --- Inisialisasi BFS ---
-    // Orang pertama terinfeksi pada Hari 0. Masukkan dia ke antrian.
-    if (start < 0 || start >= V) {
-        return {}; // Node awal tidak valid
-    }
+// inti Mencari semua node yang berjarak tepat K dari S menggunakan BFS.
+vector<int> bfs_infected(int V, const vector<vector<int>>& adj, int S, int K) {
+    // dist berfungsi menyimpan jarak/hari dari S. -1 = Belum dikunjungi.
+    vector<int> dist(V, -1);   // Digunakan untuk melacak jarak terpendek dari node awal S ke setiap node lain
+    queue<int> q; // Menjamin node-node diproses secara berurutan berdasarkan jarak/hari
     
-    distance[start] = 0;
-    q.push(start);
-
-    // --- Proses Penyebaran (BFS) ---
+    // Inisialisasi Node S pada Hari 0.
+    if (S < 0 || S >= V || K < 0) return {}; // Cek S dan K (K harus >= 0)
+    dist[S] = 0;
+    q.push(S);
+    
+    // BFS berfungsi menjelajahi lapis demi lapis dan hari.
     while (!q.empty()) {
-        int u = q.front(); // Ambil orang yang akan menularkan
-        q.pop();
-
-        // Optimasi: Jika orang ini (u) sudah terinfeksi pada Hari ke-K atau lebih,
-        // semua teman barunya akan terinfeksi pada hari > K. Jadi, kita bisa lewati.
-        if (distance[u] >= K) {
-            continue;
-        }
-
-        // Kunjungi semua teman (tetangga) dari orang u
+        int u = q.front(); q.pop();
+        
+        // Optimasi untuk tidak menyebar jika sudah mencapai target hari (K).
+        if (dist[u] >= K) continue;
+        
+        // Iterasi tetangga
         for (int v : adj[u]) {
-            // Jika teman (v) belum terinfeksi (-1)
-            if (distance[v] == -1) {
-                // Teman v terinfeksi 1 hari setelah u terinfeksi.
-                distance[v] = distance[u] + 1;
-                q.push(v); // Masukkan teman v ke antrian untuk menularkan besok
+            // Cek v valid & belum dikunjungi (-1).
+            if (dist[v] == -1) {
+                dist[v] = dist[u] + 1;
+                q.push(v);
             }
         }
     }
-
-    // --- Pengumpulan Hasil ---
-    // Cek semua orang (dari 0 sampai V-1)
+    
+    // Kumpulkan hasil Node yang jaraknya TEPAT K.
+    vector<int> result;
     for (int i = 0; i < V; ++i) {
-        // Jika jarak (hari infeksi) orang i sama persis dengan K
-        if (distance[i] == K) {
-            infected_on_K.push_back(i);
-        }
+        if (dist[i] == K) result.push_back(i);
     }
-
-    // Urutkan hasilnya dari kecil ke besar (menaik)
-    sort(infected_on_K.begin(), infected_on_K.end());
-
-    return infected_on_K;
+            
+    // Urutkan hasil
+    sort(result.begin(), result.end());
+    return result;
 }
 
 int main() {
-    // Pengaturan agar input/output lebih cepat
-    ios_base::sync_with_stdio(false);
-    cin.tie(NULL);
-
     int V, E;
-    // 1. Baca jumlah orang (V) dan jumlah hubungan (E)
+    cout << "Masukkan jumlah vertex dan edge : " << flush;
     if (!(cin >> V >> E)) return 0;
-
-    // Output detail input
-    cout << "Jumlah vertex dan edge: " << V << " " << E << endl;
-
-    // Siapkan wadah untuk daftar pertemanan (Adjacency List)
+    
     vector<vector<int>> adj(V);
-
-    // 2. Baca semua hubungan pertemanan
+    cout << "Masukkan " << E << " edge (format: u v), satu per baris:\n";
+    
+    // Membangun jaringan tidak berarah
     for (int i = 0; i < E; ++i) {
         int u, v;
-        if (!(cin >> u >> v)) break;
-
-        // Hubungan dua arah (tak berarah): u teman v, dan v teman u
-        adj[u].push_back(v);
-        adj[v].push_back(u);
-    }
-
-    int S, K;
-    // 3. Baca node awal terinfeksi (S) dan hari yang dicari (K)
-    if (!(cin >> S >> K)) return 0;
-
-    // Output detail input
-    cout << "Node Awal dan Hari Terinfeksi: " << S << " " << K << endl;
-
-    // Panggil fungsi utama BFS untuk simulasi
-    vector<int> result = virus_spread_bfs(V, adj, S, K);
-
-    // --- Output Hasil Akhir ---
-    cout << "Node terinfeksi: ";
-    if (result.empty()) {
-        // Jika tidak ada yang terinfeksi
-        cout << "(TIDAK ADA)" << endl;
-    } else {
-        // Cetak daftar node (orang) yang terinfeksi pada hari ke-K
-        for (size_t i = 0; i < result.size(); ++i) {
-            cout << result[i] << (i == result.size() - 1 ? "" : " ");
+        if (!(cin >> u >> v)) return 0;
+        // Cek validitas u dan v
+        if (u >= 0 && u < V && v >= 0 && v < V) {
+            adj[u].push_back(v);
+            adj[v].push_back(u);
         }
-        cout << endl;
     }
-
+    
+    int S, K;
+    cout << "Masukkan node awal dan hari (S K): " << flush;
+    if (!(cin >> S >> K)) return 0;
+    
+    // Cek validitas input
+    if (S < 0 || S >= V || K < 0) {
+        cout << "Input S atau K tidak valid.\n";
+        return 0;
+    }
+    
+    cout << "Awal terinfeksi: node " << S << " pada hari 0\n";
+    
+    // Panggil simulasi.
+    vector<int> result = bfs_infected(V, adj, S, K);
+    
+    // Output hasil.
+    cout << "Node terinfeksi pada hari " << K << ": ";
+    if (result.empty()) {
+        cout << "(TIDAK ADA)\n";
+    } else {
+        // Cetak dengan pemisah spasi.
+        for (size_t i = 0; i < result.size(); ++i) {
+            cout << (i ? " " : "") << result[i];
+        }
+        cout << '\n';
+    }
+    
     return 0;
 }
